@@ -35,14 +35,12 @@ router.post("/signup", (req, res) => {
     "SELECT status, password, email, role FROM user WHERE email = ?";
 
   connection.query(query, [email], (err, results) => {
+    console.log("results",results)
     if (!err) {
       if (results.length == 0) {
         const query =
           "INSERT INTO user (contactnumber, email, password, status, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
-        connection.query(
-          query,
-          [contactnumber, email, password, status, role],
-          (err, result) => {
+        connection.query(query,[contactnumber, email, password, status, role],(err, result) => {
             if (!err) {
               res.status(201).send("User created successfully");
             } else {
@@ -131,7 +129,7 @@ router.get("/get", (req, res) => {
   });
 });
 
-router.patch("/updatePassword", (req, res) => {
+router.patch("/updatePassword",auth, (req, res) => {
   const { email, password } = req.body;
 
   const query = "UPDATE user SET password=? WHERE email=?";
