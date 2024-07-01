@@ -30,3 +30,16 @@ CREATE TABLE products (
     status ENUM('active', 'inactive') DEFAULT 'active'
 );
 
+
+CREATE TABLE Bill (
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    contactNumber VARCHAR(15) NOT NULL,
+    paymentMethod VARCHAR(15) NOT NULL,
+    total int NOT NULL,
+    productDetails JSOn DEFAULT NULL,
+    createdBy VARCHAR(100) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
