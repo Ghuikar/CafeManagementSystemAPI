@@ -28,15 +28,17 @@ router.post('/generateReport',(req,res)=>{
 
     connection.query(query, [generateUuid, name, email, contactNumber, paymentMethod, total, JSON.stringify(productDetails), createdBy],
         (err, result) => {
+
             if (!err) {
                 ejs.renderFile(path.join(__dirname, 'report.ejs'), { name, email, contactNumber, paymentMethod, totalAmount: total, productDetails: productDetailsReport }, 
-                (err, data) => {
-                              
+                (err, html) => {              
                     if (err) {
                         res.status(500).json({ message: "Error occurred while generating report", error: err });
                     } else {
-                        const pdfOptions = { format: 'A10' };
-                        pdf.create(data, pdfOptions).toFile(path.join(__dirname, 'reports', `${generateUuid}.pdf`), (err, result) => {
+                        const pdfOptions = { format: 'A4' };
+
+                        // pdf.create(html, options).toFile(filepath, callback)
+                        pdf.create(html, pdfOptions).toFile(path.join('./generated_pdf/' + `${generateUuid}.pdf`), (err, result) => {
                             if (err) {
                                 res.status(500).json({ message: "Error occurred while generating PDF", error: err });
                             } else {
@@ -51,5 +53,83 @@ router.post('/generateReport',(req,res)=>{
         }
     );
 });
+
+
+
+router.post('/getPdf',(req,res)=>{
+    const {uuid, name, email, contactNumber, paymentMethod, total, productDetails, createdBy } = req.body;
+    
+   const pdfPath =  './generated_pdf/' + uuid + ".pdf";
+    console.log("pdfPath",pdfPath);
+    console.log("fs.existsSync(pdfPath)",fs.existsSync(pdfPath))
+    if (fs.existsSync(pdfPath)) {
+      res.contentType("application/pdf");
+      fs.createReadStream(pdfPath).pipe(res);
+    } else {
+
+        ejs.renderFile(path.join(__dirname, 'report.ejs'), { name, email, contactNumber, paymentMethod, totalAmount: total, productDetails }, 
+        (err, html) => {              
+            if (err) {
+                res.status(500).json({ message: "Error occurred while generating report", error: err });
+            } else {
+                const pdfOptions = { format: 'A4' };
+
+                // pdf.create(html, options).toFile(filepath, callback)
+                pdf.create(html, pdfOptions).toFile(path.join('./generated_pdf/' + uuid +`.pdf`), (err, result) => {
+                    if (err) {
+                        res.status(500).json({ message: "Error occurred while generating PDF", error: err });
+                    } else {
+                        res.status(201).json({ message: "Bill created and PDF generated successfully", uuid: uuid });
+                    }
+                });
+            }
+        });
+
+
+    }
+
+
+
+})
+
+
+// GET all bills
+router.get('/getBills', (req, res) => {
+    const query = "SELECT * FROM Bill order by id DESC";
+
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error("Error fetching bills:", err);
+            res.status(500).json({ error: "Failed to fetch bills" });
+            return;
+        }
+
+        res.status(200).json(results);
+    });
+});
+
+
+router.delete('/deleteBill/:id', (req, res) => {
+    const id = req.params.id;
+    console.log(id)
+    const query = "DELETE FROM Bill WHERE id = ?";
+
+    connection.query(query, [id], (err, result) => {
+        if (err) {
+            console.error("Error deleting bill:", err);
+            res.status(500).json({ error: "Failed to delete bill" });
+            return;
+        }
+
+        if (result.affectedRows === 0) {
+            res.status(404).json({ message: "Bill not found" });
+            return;
+        }
+
+        res.status(200).json({ message: "Bill deleted successfully" });
+    });
+});
+
+
 
 module.exports=router
