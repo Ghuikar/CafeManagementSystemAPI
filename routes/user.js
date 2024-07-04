@@ -22,10 +22,12 @@ router.get("/getUsers", auth, checkRole, (req, res) => {
   });
 });
 
-router.post("/signup", (req, res) => {
-  const { contactnumber, email, password, status, role } = req.body;
 
-  if (!contactnumber || !email || !password || status === undefined || !role) {
+router.post("/signup", (req, res) => {
+  console.log("req.body",req.body)
+  const { name,contactnumber, email, password} = req.body;
+
+  if (!contactnumber || !email || !password) {
     return res
       .status(400)
       .send("All fields are required and should be correctly spelled");
@@ -39,23 +41,26 @@ router.post("/signup", (req, res) => {
     if (!err) {
       if (results.length == 0) {
         const query =
-          "INSERT INTO user (contactnumber, email, password, status, role, created_at) VALUES (?, ?, ?, ?, ?, NOW())";
-        connection.query(query,[contactnumber, email, password, status, role],(err, result) => {
+          "INSERT INTO user (name,contactnumber, email, password, status, role, created_at) VALUES (?,?, ?, ?, false , 'user' , NOW())";
+        connection.query(query,[name,contactnumber, email, password],(err, result) => {
             if (!err) {
-              res.status(201).send("User created successfully");
+              res.status(201).json({message:"User created successfully"});
             } else {
-              res.status(500).send(err);
+              
+              res.status(500).json({message: 'User Creation Failed' , Error:err});
             }
           }
         );
       } else {
-        res.status(400).send("Email Already Exists");
+        res.status(400).json({message:"Email Already Exists"});
       }
     } else {
-      res.status(500).send(err);
+      res.status(500).json({message:err});
     }
   });
 });
+
+
 
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -94,7 +99,6 @@ router.post("/forget-password", (req, res) => {
   const query = "SELECT email,password, role,status FROM user WHERE email = ?";
 
   connection.query(query, [email], (err, result) => {
-    console.log("result", result);
     if (result.length == 0) {
       res.status(200).json({ message: "User does not exist" });
     } else {
@@ -110,7 +114,6 @@ router.post("/forget-password", (req, res) => {
 
       transporter.sendMail(mailOptions, (err, info) => {
         if (err) {
-          console.error("Error sending email:", err);
           return res.status(500).json({ error: "Error sending email" });
         }
 

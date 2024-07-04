@@ -1,13 +1,13 @@
 CREATE TABLE user (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
     contactnumber VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    status TINYINT(1) NOT NULL DEFAULT 1,
+    status BOOLEAN NOT NULL DEFAULT true,
     role ENUM('admin', 'user') DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 
 INSERT INTO user (contactnumber, email, password, status, role, created_at)
